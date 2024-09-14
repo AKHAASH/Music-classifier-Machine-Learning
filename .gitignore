@@ -1,0 +1,9 @@
+src/__pycache__
+
+data/labeled/labels_with_artists.csv
+data/features.csv
+data/music_mood_model.pkl
+
+static
+
+venv

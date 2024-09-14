@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Playlist</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .upload-section {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .upload-section button {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+
+        .uploaded-files {
+            margin-top: 20px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .serial-number {
+            width: 40px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .file-name {
+            flex-grow: 1;
+            margin-right: 20px;
+            font-size: 16px;
+        }
+
+        .file-controls {
+            display: flex;
+            align-items: center;
+        }
+
+        .file-controls audio {
+            margin-right: 20px;
+        }
+
+        .file-controls button {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .file-controls button:hover {
+            background-color: #ff1a1a;
+        }
+
+        /* Filter Section Styles */
+        .filter-section {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            width: 200px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-section h3 {
+            margin: 0 0 10px;
+            font-size: 18px;
+        }
+
+        .filter-section .filter-group {
+            margin-bottom: 15px;
+        }
+
+        .filter-section label {
+            display: block;
+            margin: 5px 0;
+        }
+
+        .filter-section input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        .filter-section .select-all {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+    </style>
+    <script>
+        function toggleSelectAll(groupName, selectAllCheckbox) {
+            const checkboxes = document.querySelectorAll(`input[name="${groupName}"]`);
+            checkboxes.forEach(checkbox => checkbox.checked = selectAllCheckbox.checked);
+        }
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>My Playlist</h1>
+
+        <div class="upload-section">
+            <form action="/upload" method="post" enctype="multipart/form-data">
+                <input type="file" name="file" accept="audio/*">
+                <button type="submit">Add</button>
+                <button id="playAllBtn" type="button">Play All</button>
+            </form>
+        </div>
+
+        <!-- Filter Section -->
+<!-- Filter Section -->
+<div class="filter-section" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+    <h3 style="margin-bottom: 10px;">Filter By</h3>
+
+    <!-- Filter Form -->
+    <form action="{{ url_for('apply_filters') }}" method="post" id="filter-form">
+        <!-- Emotions Filter -->
+        <div class="filter-group" style="margin-bottom: 15px;">
+            <strong>Emotions</strong>
+            <label class="select-all" style="display: block; margin-bottom: 5px;">
+                <input type="checkbox" onclick="toggleSelectAll('emotion', this)"> Select All
+            </label>
+            <label style="display: block; margin-left: 10px;">
+                <input type="checkbox" name="emotion" value="happy"> Happy
+            </label>
+            <label style="display: block; margin-left: 10px;">
+                <input type="checkbox" name="emotion" value="romantic"> Romantic
+            </label>
+            <label style="display: block; margin-left: 10px;">
+                <input type="checkbox" name="emotion" value="sad"> Sad
+            </label>
+        </div>
+
+        <!-- Singer Filter -->
+        <div class="filter-group">
+            <strong>Singer</strong>
+            <label class="select-all" style="display: block; margin-bottom: 5px;">
+                <input type="checkbox" onclick="toggleSelectAll('singer', this)"> Select All
+            </label>
+            <!-- Loop to display unique singers -->
+            {% for singer in artists %}
+            <label style="display: block; margin-left: 10px;">
+                <input type="checkbox" name="singer" value="{{ singer }}">{{ singer }}
+            </label>
+            {% endfor %}
+        </div>
+
+        <!-- Apply Filters Button -->
+        <button type="submit" style="margin-top: 15px; padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Apply Filters
+        </button>
+    </form>
+</div>
+
+
+        <div class="uploaded-files" id="playlist">
+            {% for file in files %}
+            <div class="file-item">
+                <div class="serial-number">{{ loop.index }}.</div>
+                <div class="file-name">{{ file }}</div>
+                <div class="file-controls">
+                    <audio controls>
+                        <source src="{{ url_for('static', filename='uploads/' ~ file | urlencode) }}" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                    <form action="{{ url_for('remove_file', filename=file | urlencode) }}" method="post" style="display: inline;">
+                        <button type="submit">Remove</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('playAllBtn').addEventListener('click', function() {
+            const songs = document.querySelectorAll('#playlist audio');
+            let currentIndex = 0;
+
+            function playNextSong() {
+                if (currentIndex < songs.length) {
+                    songs[currentIndex].play();
+                    songs[currentIndex].addEventListener('ended', function() {
+                        currentIndex++;
+                        playNextSong(); // Play the next song when the current one ends
+                    });
+                }
+            }
+
+            // Start playing the first song
+            playNextSong();
+        });
+        const audioPlayers = document.querySelectorAll('#playlist audio');
+
+        // Add event listeners to each audio element
+        audioPlayers.forEach(audio => {
+            audio.addEventListener('play', () => {
+                // Pause all other audio elements except the one currently playing
+                audioPlayers.forEach(otherAudio => {
+                    if (otherAudio !== audio) {
+                        otherAudio.pause();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
