@@ -1,0 +1,3 @@
+Music Mood Playlist Filter
+Project Overview
+The Music Mood Playlist Filter is an innovative tool that allows users to filter and curate music playlists based on advanced auditory features such as pitch and artist. This solution extends beyond traditional playlist filtering by enabling users to refine their music experience based on the specific pitch of songs, offering a unique way to explore and enjoy music.
